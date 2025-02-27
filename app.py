@@ -1,5 +1,5 @@
 import streamlit as st
-import qrcode
+import app
 from PIL import Image
 from pyzbar.pyzbar import decode
 import io
@@ -20,9 +20,9 @@ class QRCodeScanner(VideoTransformerBase):
 
 # Function to generate a QR code from given text or URL
 def generate_qr_code(data):
-    qr = qrcode.QRCode(
+    qr = app.QRCode(
         version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        error_correction=app.constants.ERROR_CORRECT_L,
         box_size=10,
         border=4,
     )
