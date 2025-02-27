@@ -1,28 +1,29 @@
 import streamlit as st
-import app
+import qrcode
 from PIL import Image
-from pyzbar.pyzbar import decode
 import io
 import cv2
+import numpy as np
 from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
 
 # Configure the Streamlit app with title, icon, and wide layout
 st.set_page_config(page_title="QR Code Tool", page_icon="🔳", layout="wide")
 
-# Class for real-time QR code scanning using webcam
+# Class for real-time QR code scanning using webcam with OpenCV
 class QRCodeScanner(VideoTransformerBase):
     def transform(self, frame):
         img = frame.to_ndarray(format="bgr24")  # Convert frame to NumPy array
-        decoded_objects = decode(img)  # Decode QR codes from the frame
-        for obj in decoded_objects:
-            st.success(f"Decoded Text: {obj.data.decode('utf-8')}")  # Display decoded text
+        detector = cv2.QRCodeDetector()         # Initialize OpenCV's QR code detector
+        data, points, _ = detector.detectAndDecode(img)
+        if data:
+            st.success(f"Decoded Text: {data}")  # Display decoded text if found
         return img  # Return the frame for display
 
 # Function to generate a QR code from given text or URL
 def generate_qr_code(data):
-    qr = app.QRCode(
+    qr = qrcode.QRCode(
         version=1,
-        error_correction=app.constants.ERROR_CORRECT_L,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
         box_size=10,
         border=4,
     )
@@ -31,12 +32,14 @@ def generate_qr_code(data):
     img = qr.make_image(fill='black', back_color='white')  # Create QR code image
     return img
 
-# Function to decode QR codes from an uploaded image
+# Function to decode QR codes from an uploaded image using OpenCV
 def decode_qr_code(uploaded_image):
-    image = Image.open(uploaded_image)  # Open the image file
-    decoded_objects = decode(image)  # Decode the QR code
-    decoded_texts = [obj.data.decode('utf-8') for obj in decoded_objects]  # Extract text
-    return decoded_texts
+    # Convert uploaded file to an OpenCV image
+    file_bytes = np.asarray(bytearray(uploaded_image.read()), dtype=np.uint8)
+    image = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+    detector = cv2.QRCodeDetector()  # Initialize detector
+    data, points, _ = detector.detectAndDecode(image)
+    return [data] if data else []  # Return result as a list for consistency
 
 # App title and description
 st.title("🔳 QR Code Encoder & Decoder")
@@ -44,6 +47,7 @@ st.markdown("### A simple tool to generate, decode, and scan QR codes in real-ti
 
 # Layout with two columns for generating and decoding QR codes
 col1, col2 = st.columns(2)
+
 with col1:
     st.subheader("Generate QR Code")
     input_text = st.text_input("Enter text or URL to generate QR Code")
