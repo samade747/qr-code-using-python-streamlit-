@@ -1,4 +1,5 @@
 qrcode[pil]
 pyzbar
 opencv-python
+streamlit
 streamlit-webrtc
