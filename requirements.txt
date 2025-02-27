@@ -3,3 +3,4 @@ pyzbar
 opencv-python
 streamlit
 streamlit-webrtc
+numpy
