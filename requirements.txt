@@ -1,0 +1,4 @@
+qrcode[pil]
+pyzbar
+opencv-python
+streamlit-webrtc
