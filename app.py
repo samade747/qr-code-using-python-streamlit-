@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
 
-# Configure the Streamlit app with title, icon, and wide layout yes
+# Configure the Streamlit app with title, icon, and wide layout
 st.set_page_config(page_title="QR Code Tool", page_icon="🔳", layout="wide")
 
 # Class for real-time QR code scanning using webcam with OpenCV
@@ -30,7 +30,13 @@ def generate_qr_code(data):
     qr.add_data(data)
     qr.make(fit=True)
     img = qr.make_image(fill='black', back_color='white')  # Create QR code image
-    return img
+    
+    # Convert PIL image to bytes
+    img_bytes = io.BytesIO()
+    img.save(img_bytes, format="PNG")
+    img_bytes.seek(0)  # Reset file pointer
+    
+    return img_bytes  # Return the byte stream
 
 # Function to decode QR codes from an uploaded image using OpenCV
 def decode_qr_code(uploaded_image):
@@ -54,10 +60,8 @@ with col1:
     if st.button("Generate QR Code", use_container_width=True):
         if input_text:
             qr_image = generate_qr_code(input_text)
-            img_bytes = io.BytesIO()
-            qr_image.save(img_bytes, format='PNG')
-            st.image(qr_image, caption="Generated QR Code")
-            st.download_button("Download QR Code", img_bytes.getvalue(), "qrcode.png", "image/png")
+            st.image(qr_image, caption="Generated QR Code")  # Display QR Code
+            st.download_button("Download QR Code", qr_image.getvalue(), "qrcode.png", "image/png")
         else:
             st.error("Please enter text or a URL")
 
