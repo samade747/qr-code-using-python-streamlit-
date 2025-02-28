@@ -9,7 +9,7 @@ from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
 import av
 
 # Configure the Streamlit app
-st.set_page_config(page_title="QR Code Tool", page_icon="🔳", layout="wide")
+st.set_page_config(page_title="QR Code Tool by samad", page_icon="🔳", layout="wide")
 
 # Initialize session state for QR scanning
 if "qr_code_data" not in st.session_state:
