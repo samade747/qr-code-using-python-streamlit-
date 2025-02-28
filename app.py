@@ -68,7 +68,7 @@ with col1:
             qr_np = np.array(qr_image)
 
             # Display QR code
-            st.image(qr_np, caption="Generated QR Code", use_column_width=True)
+            st.image(qr_np, caption="Generated QR Code", use_container_width=True)
 
             # Download button
             st.download_button("Download QR Code", img_bytes.getvalue(), "qrcode.png", "image/png")
@@ -81,7 +81,7 @@ with col2:
     uploaded_file = st.file_uploader("Upload a QR Code image", type=["png", "jpg", "jpeg"], help="Upload an image containing a QR code")
     
     if uploaded_file:
-        st.image(uploaded_file, caption="Uploaded QR Code", use_column_width=True)
+        st.image(uploaded_file, caption="Uploaded QR Code", use_container_width=True)
         decoded_texts = decode_qr_code(uploaded_file)
         
         if decoded_texts:
