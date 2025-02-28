@@ -6,24 +6,22 @@ import cv2
 import numpy as np
 from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
 
-# Configure the Streamlit app
+# Configure the Streamlit app with title, icon, and wide layout
 st.set_page_config(page_title="QR Code Tool", page_icon="🔳", layout="wide")
 
-# Store scanned QR code result globally
-if "scanned_text" not in st.session_state:
-    st.session_state.scanned_text = None
-
-# Class for real-time QR code scanning using OpenCV
+# Class for real-time QR code scanning using webcam with OpenCV
 class QRCodeScanner(VideoTransformerBase):
     def transform(self, frame):
         img = frame.to_ndarray(format="bgr24")  # Convert frame to NumPy array
         detector = cv2.QRCodeDetector()         # Initialize OpenCV's QR code detector
         data, points, _ = detector.detectAndDecode(img)
+        
         if data:
-            st.session_state.scanned_text = data  # Store result globally
+            st.session_state["scanned_qr"] = data  # Store result in session state
+
         return img  # Return the frame for display
 
-# Function to generate a QR code
+# Function to generate a QR code from given text or URL
 def generate_qr_code(data):
     qr = qrcode.QRCode(
         version=1,
@@ -33,60 +31,78 @@ def generate_qr_code(data):
     )
     qr.add_data(data)
     qr.make(fit=True)
-    img = qr.make_image(fill='black', back_color='white')
+    img = qr.make_image(fill='black', back_color='white')  # Create QR code image
     return img
 
-# Function to decode QR codes from an uploaded image
+# Function to decode QR codes from an uploaded image using OpenCV
 def decode_qr_code(uploaded_image):
+    # Convert uploaded file to an OpenCV image
     file_bytes = np.asarray(bytearray(uploaded_image.read()), dtype=np.uint8)
     image = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
-    detector = cv2.QRCodeDetector()
+    detector = cv2.QRCodeDetector()  # Initialize detector
     data, points, _ = detector.detectAndDecode(image)
-    return [data] if data else []
+    return [data] if data else []  # Return result as a list for consistency
 
-# App UI
+# App title and description
 st.title("🔳 QR Code Encoder & Decoder")
-st.markdown("### Generate, decode, and scan QR codes in real-time.")
+st.markdown("### A simple tool to generate, decode, and scan QR codes in real-time.")
 
-# Two-column layout
+# Layout with two columns for generating and decoding QR codes
 col1, col2 = st.columns(2)
 
+# QR Code Generation Section
 with col1:
     st.subheader("Generate QR Code")
-    input_text = st.text_input("Enter text or URL")
+    input_text = st.text_input("Enter text or URL to generate QR Code")
+    
     if st.button("Generate QR Code", use_container_width=True):
         if input_text:
             qr_image = generate_qr_code(input_text)
+            
+            # Convert PIL Image to BytesIO
             img_bytes = io.BytesIO()
             qr_image.save(img_bytes, format='PNG')
-            st.image(qr_image, caption="Generated QR Code")
+            img_bytes.seek(0)
+
+            # Convert to NumPy array for Streamlit display
+            qr_np = np.array(qr_image)
+
+            # Display QR code
+            st.image(qr_np, caption="Generated QR Code", use_column_width=True)
+
+            # Download button
             st.download_button("Download QR Code", img_bytes.getvalue(), "qrcode.png", "image/png")
         else:
             st.error("Please enter text or a URL")
 
+# QR Code Decoding Section
 with col2:
     st.subheader("Decode QR Code")
-    uploaded_file = st.file_uploader("Upload a QR Code image", type=["png", "jpg", "jpeg"])
+    uploaded_file = st.file_uploader("Upload a QR Code image", type=["png", "jpg", "jpeg"], help="Upload an image containing a QR code")
+    
     if uploaded_file:
         st.image(uploaded_file, caption="Uploaded QR Code", use_column_width=True)
         decoded_texts = decode_qr_code(uploaded_file)
+        
         if decoded_texts:
             st.success("Decoded Text:")
             for text in decoded_texts:
                 st.code(text, language='plaintext')
         else:
-            st.error("No QR code detected.")
+            st.error("No QR code detected or could not decode.")
 
-# Section for real-time QR code scanning
+# Section for real-time QR code scanning using webcam
 st.subheader("📷 Scan QR Code using Camera")
 st.write("Use your webcam to scan QR codes in real-time.")
 
-# Start the WebRTC scanner
+if "scanned_qr" not in st.session_state:
+    st.session_state["scanned_qr"] = None
+
 webrtc_streamer(key="qr_scanner", video_transformer_factory=QRCodeScanner)
 
 # Display scanned QR code result
-if st.session_state.scanned_text:
-    st.success(f"Scanned QR Code: {st.session_state.scanned_text}")
+if st.session_state["scanned_qr"]:
+    st.success(f"Scanned QR Code: {st.session_state['scanned_qr']}")
 
 
 
