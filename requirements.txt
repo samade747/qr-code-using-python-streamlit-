@@ -1,5 +1,6 @@
-qrcode[pil]
-pyzbar
-opencv-python
 streamlit
 streamlit-webrtc
+opencv-python-headless
+qrcode[pil]
+numpy
+Pillow
