@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
 
-# Configure the Streamlit app with title, icon, and wide layout
+# Configure the Streamlit app with title, icon, and wide layout yes
 st.set_page_config(page_title="QR Code Tool", page_icon="🔳", layout="wide")
 
 # Class for real-time QR code scanning using webcam with OpenCV
